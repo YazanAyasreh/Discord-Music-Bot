@@ -6,3 +6,9 @@ id = "rcsbdrqPf1t1emc7jfxwV"
 uri = "file://README.md"
 type = "text"
 title = "README.md — updated"
+
+[[outputs]]
+id = "bidlGQ8xMCLWiSs2yFiBy"
+uri = "file://requirements.txt"
+type = "text"
+title = "requirements.txt"

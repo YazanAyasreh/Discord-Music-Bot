@@ -52,8 +52,8 @@ The panel is **persistent** — it survives bot restarts automatically.
 git clone https://github.com/YazanAyasreh/Discord-Music-Bot
 cd Discord-Music-Bot
 
-# 2. Install dependencies
-pip install -U "discord.py[voice]" yt-dlp Pillow
+# 2. Install all dependencies (one command)
+pip install -r requirements.txt
 
 # 3. Set your bot token
 
@@ -142,6 +142,7 @@ No database or external services required — playlists are stored in-memory per
 ```
 Discord-Music-Bot/
 ├── bot.py              # Main bot file — all logic lives here
+├── requirements.txt    # All Python dependencies
 ├── bot_icons/          # Cropped PNG icons (auto-generated on first run)
 │   ├── p_play.png
 │   ├── p_pause.png
