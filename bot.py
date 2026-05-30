@@ -319,31 +319,10 @@ def build_queue_embed(guild_id: int, state: "GuildMusicState") -> discord.Embed:
 
 
 def build_dashboard_embed(guild: discord.Guild, state: "GuildMusicState") -> discord.Embed:
-    track = state.now_playing
-    vc = guild.voice_client
-    active = bool(track and vc and (vc.is_playing() or vc.is_paused()))
-
-    if active:
-        return build_now_playing_embed(guild, state)
-
     e = discord.Embed(
-        title="🎵  Music Control Center",
-        description=(
-            "Join a voice channel, then use the buttons below or `/music play`.\n\n"
-            "**Features:**\n"
-            "▶️  Play, pause, skip, previous\n"
-            "🔁  Loop track or entire queue\n"
-            "🔀  Shuffle mode\n"
-            "🔂  Autoplay (YouTube radio)\n"
-            "🔊  Volume control (1–200%)\n"
-            "📋  Live queue viewer\n"
-            "⏮️  Play history navigation"
-        ),
+        description="Click the button, and any empty bot will connect to your channel without any commands - it is managed through this panel.",
         color=BRAND,
     )
-    e.add_field(name="Loop",    value=f"{LOOP_EMOJI[state.loop_mode]} `{state.loop_mode.value}`", inline=True)
-    e.add_field(name="Shuffle", value=f"`{'on' if state.shuffle else 'off'}`", inline=True)
-    e.add_field(name="Autoplay",value=f"`{'on' if state.autoplay else 'off'}`", inline=True)
     _footer(e, guild.name)
     return e
 
@@ -473,172 +452,6 @@ class VolumeModal(discord.ui.Modal, title="🔊 Set Volume"):
         await self.music_bot.update_panel(interaction.guild)
 
 
-# ── DASHBOARD PANEL VIEW ───────────────────────────────────────────────────────
-class MusicDashboardPanel(discord.ui.View):
-    _ICON = "\u200b"
-
-    def __init__(self, music_bot: "MusicBot", guild_id: int):
-        super().__init__(timeout=None)
-        self.music_bot = music_bot
-        self.guild_id = guild_id
-
-    async def _refresh(self, interaction: discord.Interaction) -> None:
-        guild = interaction.guild
-        if not guild:
-            return
-        embed = build_dashboard_embed(guild, self.music_bot.get_state(guild.id))
-        await interaction.response.edit_message(embed=embed, view=self)
-
-    # ── Row 0: Playback controls ───────────────────────────────────────────────
-    @discord.ui.button(emoji="▶️",  style=discord.ButtonStyle.success,   custom_id="r_play",  row=0)
-    async def play_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        vc = interaction.guild.voice_client if interaction.guild else None
-        if vc and vc.is_paused():
-            vc.resume()
-            state = self.music_bot.get_state(self.guild_id)
-            state.playback_started_at = asyncio.get_event_loop().time()
-            await self.music_bot.sync_voice_status(interaction.guild)
-            return await self._refresh(interaction)
-        await interaction.response.send_modal(PlayModal(self.music_bot))
-
-    @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.secondary, custom_id="r_prev",  row=0)
-    async def prev_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        if not state.play_history:
-            return await interaction.response.send_message(embed=error_embed("No previous track."), ephemeral=True)
-        track = state.play_history.pop()
-        vc = interaction.guild.voice_client if interaction.guild else None
-        if not vc:
-            return await interaction.response.send_message(embed=error_embed("Not connected to voice."), ephemeral=True)
-        try:
-            fresh = await asyncio.to_thread(extract_audio, track.webpage_url)
-            track.stream_url = fresh.stream_url
-            track.title = fresh.title
-            track.thumbnail = fresh.thumbnail or track.thumbnail
-        except Exception as exc:
-            return await interaction.response.send_message(embed=error_embed(f"Could not load previous track: `{exc}`"), ephemeral=True)
-        await interaction.response.defer(ephemeral=True)
-        vc.stop()
-        await self.music_bot.play_track(interaction.guild, interaction.channel, track)
-        await interaction.followup.send(embed=success_embed("Previous track", f"**{track.title}**"), ephemeral=True)
-
-    @discord.ui.button(emoji="⏸️", style=discord.ButtonStyle.primary,   custom_id="r_pause", row=0)
-    async def pause_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        vc = interaction.guild.voice_client if interaction.guild else None
-        if not vc or not vc.is_playing():
-            return await interaction.response.send_message(embed=error_embed("Nothing is playing."), ephemeral=True)
-        vc.pause()
-        await self.music_bot.sync_voice_status(interaction.guild)
-        await self._refresh(interaction)
-
-    @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.secondary, custom_id="r_skip",  row=0)
-    async def skip_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        vc = interaction.guild.voice_client if interaction.guild else None
-        if not vc or not (vc.is_playing() or vc.is_paused()):
-            return await interaction.response.send_message(embed=error_embed("Nothing to skip."), ephemeral=True)
-        vc.stop()
-        await interaction.response.send_message(embed=success_embed("Skipped", "Loading next track…"), ephemeral=True)
-
-    @discord.ui.button(emoji="📋", style=discord.ButtonStyle.secondary, custom_id="r_queue", row=0)
-    async def queue_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        await interaction.response.send_message(
-            embed=build_queue_embed(self.guild_id, state), ephemeral=True
-        )
-
-    # ── Row 1: Extra controls ──────────────────────────────────────────────────
-    @discord.ui.button(emoji="🔁", style=discord.ButtonStyle.secondary, custom_id="r_loop",   row=1)
-    async def loop_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        modes = list(LoopMode)
-        state.loop_mode = modes[(modes.index(state.loop_mode) + 1) % len(modes)]
-        await self._refresh(interaction)
-
-    @discord.ui.button(emoji="⏪", style=discord.ButtonStyle.secondary, custom_id="r_rew",    row=1)
-    async def rewind_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        track = state.now_playing
-        vc = interaction.guild.voice_client if interaction.guild else None
-        if not track or not vc:
-            return await interaction.response.send_message(embed=error_embed("Nothing is playing."), ephemeral=True)
-        try:
-            fresh = await asyncio.to_thread(extract_audio, track.webpage_url)
-            track.stream_url = fresh.stream_url
-        except Exception as exc:
-            return await interaction.response.send_message(embed=error_embed(f"Could not restart: `{exc}`"), ephemeral=True)
-        await interaction.response.defer(ephemeral=True)
-        vc.stop()
-        await self.music_bot.play_track(interaction.guild, interaction.channel, track)
-        await interaction.followup.send(embed=success_embed("Rewind", "Restarted current track."), ephemeral=True)
-
-    @discord.ui.button(emoji="❤️", style=discord.ButtonStyle.danger,    custom_id="r_like",   row=1)
-    async def like_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        track = state.now_playing
-        if not track:
-            return await interaction.response.send_message(embed=error_embed("Nothing is playing."), ephemeral=True)
-        # Save to a "Liked" playlist for this guild
-        pl = guild_playlists(self.guild_id)
-        liked = pl.setdefault("❤️ Liked", [])
-        if not any(t.webpage_url == track.webpage_url for t in liked):
-            liked.append(track)
-            msg = f"**{track.title}** saved to your ❤️ Liked playlist."
-        else:
-            msg = f"**{track.title}** is already in your ❤️ Liked playlist."
-        await interaction.response.send_message(embed=success_embed("Liked", msg), ephemeral=True)
-
-    @discord.ui.button(emoji="⏩", style=discord.ButtonStyle.secondary, custom_id="r_ff",     row=1)
-    async def ff_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        vc = interaction.guild.voice_client if interaction.guild else None
-        if not vc or not (vc.is_playing() or vc.is_paused()):
-            return await interaction.response.send_message(embed=error_embed("Nothing is playing."), ephemeral=True)
-        vc.stop()
-        await interaction.response.send_message(embed=success_embed("Skipped", "Loading next track…"), ephemeral=True)
-
-    @discord.ui.button(emoji="🔊", style=discord.ButtonStyle.secondary, custom_id="r_vol",    row=1)
-    async def volume_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        await interaction.response.send_modal(VolumeModal(self.music_bot, self.guild_id))
-
-    # ── Row 2: Mode toggles ────────────────────────────────────────────────────
-    @discord.ui.button(emoji="🎶", style=discord.ButtonStyle.secondary, custom_id="r_pl",     row=2)
-    async def playlist_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        await interaction.response.send_message(
-            embed=build_queue_embed(self.guild_id, state), ephemeral=True
-        )
-
-    @discord.ui.button(emoji="🔀", style=discord.ButtonStyle.secondary, custom_id="r_shuf",   row=2)
-    async def shuffle_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        state.shuffle = not state.shuffle
-        await self._refresh(interaction)
-
-    @discord.ui.button(emoji="⏹️", style=discord.ButtonStyle.danger,    custom_id="r_stop",   row=2)
-    async def stop_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        state.queue.clear()
-        state.play_history.clear()
-        state.now_playing = None
-        vc = interaction.guild.voice_client if interaction.guild else None
-        if vc:
-            vc.stop()
-            await self.music_bot.set_voice_channel_status(interaction.guild, None)
-            await vc.disconnect()
-        await self._refresh(interaction)
-
-    @discord.ui.button(emoji="🔂", style=discord.ButtonStyle.secondary, custom_id="r_auto",   row=2)
-    async def autoplay_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        state = self.music_bot.get_state(self.guild_id)
-        state.autoplay = not state.autoplay
-        if state.autoplay:
-            state.autoplay_history.clear()
-        await self._refresh(interaction)
-
-    @discord.ui.button(emoji="🛟", style=discord.ButtonStyle.secondary, custom_id="r_help",   row=2)
-    async def help_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        await interaction.response.send_message(embed=build_help_embed(), ephemeral=True)
-
-
 # ── BOT ────────────────────────────────────────────────────────────────────────
 class MusicBot(commands.Bot):
     def __init__(self):
@@ -653,7 +466,6 @@ class MusicBot(commands.Bot):
         return self.music_states[guild_id]
 
     async def setup_hook(self) -> None:
-        self.add_view(MusicDashboardPanel(self, 0))   # re-register persistent view
         await self.tree.sync()
         log.info("Slash commands synced globally.")
 
@@ -707,8 +519,7 @@ class MusicBot(commands.Bot):
             return
         try:
             embed = build_dashboard_embed(guild, state)
-            view = MusicDashboardPanel(self, guild.id)
-            await panel.edit(embed=embed, view=view)
+            await panel.edit(embed=embed)
         except discord.HTTPException:
             self._clear_panel(state)
 
@@ -726,8 +537,7 @@ class MusicBot(commands.Bot):
         if not isinstance(channel, (discord.TextChannel, discord.Thread)):
             return None
         embed = build_dashboard_embed(guild, state)
-        view = MusicDashboardPanel(self, guild.id)
-        message = await channel.send(embed=embed, view=view)
+        message = await channel.send(embed=embed)
         self._bind_panel(state, message)
         return message
 
@@ -1138,8 +948,7 @@ async def _post_dashboard(
         )
     state = bot.get_state(interaction.guild_id)
     embed = build_dashboard_embed(interaction.guild, state)
-    view = MusicDashboardPanel(bot, interaction.guild_id)
-    message = await channel.send(embed=embed, view=view)
+    message = await channel.send(embed=embed)
     bot._bind_panel(state, message)
     await interaction.response.send_message(
         embed=success_embed("Dashboard posted", f"Music control panel sent to {channel.mention}."),
