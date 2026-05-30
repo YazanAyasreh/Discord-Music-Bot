@@ -466,6 +466,11 @@ class MusicDashboardPanel(discord.ui.View):
         super().__init__(timeout=None)
         self.music_bot = music_bot
         self.guild_id = guild_id
+        # Swap Unicode emoji → custom app emoji where available
+        app_emojis: dict[str, discord.PartialEmoji] = getattr(music_bot, "app_emojis", {})
+        for child in self.children:
+            if isinstance(child, discord.ui.Button) and child.custom_id in app_emojis:
+                child.emoji = app_emojis[child.custom_id]
 
     async def _refresh(self, interaction: discord.Interaction) -> None:
         if not interaction.guild:
@@ -644,9 +649,40 @@ class MusicBot(commands.Bot):
         return self.music_states[guild_id]
 
     async def setup_hook(self) -> None:
+        self.app_emojis: dict[str, discord.PartialEmoji] = {}
+        await self._load_app_emojis()
         self.add_view(MusicDashboardPanel(self, 0))
         await self.tree.sync()
         log.info("Slash commands synced globally.")
+
+    async def _load_app_emojis(self) -> None:
+        """Upload bot_icons/*.png as application emojis (skips existing ones)."""
+        icon_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_icons")
+        if not os.path.isdir(icon_dir):
+            log.warning("bot_icons/ directory not found – using default emoji.")
+            return
+        try:
+            existing = {e.name: e for e in await self.fetch_application_emojis()}
+        except Exception as exc:
+            log.warning("Could not fetch application emojis: %s", exc)
+            return
+        for fname in sorted(os.listdir(icon_dir)):
+            if not fname.endswith(".png"):
+                continue
+            name = fname[:-4]
+            if name in existing:
+                e = existing[name]
+                self.app_emojis[name] = discord.PartialEmoji(name=e.name, id=e.id)
+                log.info("App emoji cached: %s (id=%s)", name, e.id)
+                continue
+            try:
+                with open(os.path.join(icon_dir, fname), "rb") as f:
+                    img_bytes = f.read()
+                emoji = await self.create_application_emoji(name=name, image=img_bytes)
+                self.app_emojis[name] = discord.PartialEmoji(name=emoji.name, id=emoji.id)
+                log.info("App emoji created: %s (id=%s)", name, emoji.id)
+            except Exception as exc:
+                log.warning("Could not create emoji %s: %s", name, exc)
 
     # ── Voice status ───────────────────────────────────────────────────────────
     def format_voice_status(self, track: Track, *, paused: bool = False) -> str:
