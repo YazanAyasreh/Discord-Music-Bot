@@ -27,9 +27,8 @@ The `/panel` command posts a persistent control panel to any channel.
 All buttons use **custom icons** uploaded as application emojis.
 
 ```
-Row 0 │  ▶  Play    ⏮  Prev    ⏸  Pause    ⏭  Skip    📋  Queue
-Row 1 │  🔄  Restart  ⏪  Back   ❤️  Like    ⏩  FF      🔊  Volume
-Row 2 │  🎧  Playlist  🔀  Shuffle  ⏭⏭  Autoplay  🔁  Loop  ⤢  Help
+Row 0 │  ▶  Play    ⏮  Prev    ⏸  Pause/Resume    ⏭  Next    📋  Queue
+Row 1 │  🔁  Repeat   🎶  Playlist   ⏹  Stop   🛟  Help   🔊  Volume
 ```
 
 Click **▶ Play** while nothing is queued and a modal opens for you to type a search or URL.  
