@@ -602,23 +602,28 @@ class MusicBot(commands.Bot):
         except Exception as exc:
             log.warning("Could not fetch application emojis: %s", exc)
             return
+        # Names we want to load from disk
+        wanted = {fname[:-4] for fname in os.listdir(icon_dir) if fname.endswith(".png")}
+        # Delete any existing emoji that we're about to re-upload (force fresh icons)
+        for name, e in existing.items():
+            if name in wanted:
+                try:
+                    await e.delete()
+                    log.info("App emoji deleted for refresh: %s", name)
+                except Exception as exc:
+                    log.warning("Could not delete emoji %s: %s", name, exc)
         for fname in sorted(os.listdir(icon_dir)):
             if not fname.endswith(".png"):
                 continue
             name = fname[:-4]
-            if name in existing:
-                e = existing[name]
-                self.app_emojis[name] = discord.PartialEmoji(name=e.name, id=e.id)
-                log.info("App emoji cached: %s (id=%s)", name, e.id)
-                continue
             try:
                 with open(os.path.join(icon_dir, fname), "rb") as f:
                     img_bytes = f.read()
                 emoji = await self.create_application_emoji(name=name, image=img_bytes)
                 self.app_emojis[name] = discord.PartialEmoji(name=emoji.name, id=emoji.id)
-                log.info("App emoji created: %s (id=%s)", name, emoji.id)
+                log.info("App emoji uploaded: %s (id=%s)", name, emoji.id)
             except Exception as exc:
-                log.warning("Could not create emoji %s: %s", name, exc)
+                log.warning("Could not upload emoji %s: %s", name, exc)
 
     # ── Voice status ───────────────────────────────────────────────────────────
     def format_voice_status(self, track: Track, *, paused: bool = False) -> str:
