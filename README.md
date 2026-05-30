@@ -56,8 +56,17 @@ cd Discord-Music-Bot
 pip install -U "discord.py[voice]" yt-dlp Pillow
 
 # 3. Set your bot token
-#    On Replit: add DISCORD_TOKEN as a Secret
-#    Locally:   export DISCORD_TOKEN="your-token-here"
+
+# On Replit → add DISCORD_TOKEN as a Secret (Secrets tab in the sidebar)
+
+# On Linux / macOS:
+export DISCORD_TOKEN="your-token-here"
+
+# On Windows PowerShell:
+$env:DISCORD_TOKEN = "your-token-here"
+
+# On Windows Command Prompt (cmd):
+set DISCORD_TOKEN=your-token-here
 
 # 4. Run the bot
 python3 bot.py
