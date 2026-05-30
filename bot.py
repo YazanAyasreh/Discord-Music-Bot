@@ -323,7 +323,6 @@ def build_dashboard_embed(guild: discord.Guild, state: "GuildMusicState") -> dis
         description="Click the button, and any empty bot will connect to your channel without any commands - it is managed through this panel.",
         color=BRAND,
     )
-    e.set_image(url="https://i.imgur.com/dBXBEgN.png")
     _footer(e, guild.name)
     return e
 
