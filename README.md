@@ -49,8 +49,8 @@ The panel is **persistent** — it survives bot restarts automatically.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/musicnot-bot
-cd musicnot-bot
+git clone https://github.com/YazanAyasreh/Discord-Music-Bot
+cd Discord-Music-Bot
 
 # 2. Install dependencies
 pip install -U "discord.py[voice]" yt-dlp Pillow
@@ -131,7 +131,7 @@ No database or external services required — playlists are stored in-memory per
 ## 📁 Project Structure
 
 ```
-musicnot-bot/
+Discord-Music-Bot/
 ├── bot.py              # Main bot file — all logic lives here
 ├── bot_icons/          # Cropped PNG icons (auto-generated on first run)
 │   ├── p_play.png
