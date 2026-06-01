@@ -47,8 +47,10 @@ The panel is **persistent** — it survives bot restarts automatically.
 ```bash
 git clone https://github.com/YazanAyasreh/Discord-Music-Bot
 cd Discord-Music-Bot
+```
 
 # 2. Install all dependencies (one command)
+```bash
 pip install -r requirements.txt
 ```
 # 3. Set your bot token
