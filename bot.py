@@ -1172,7 +1172,7 @@ async def on_app_command_error(
 
 # ── ENTRY POINT ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    token = os.environ.get("DISCORD_TOKEN")
+    token = "Your_Discord_Bot_Token"
     if not token:
         raise SystemExit("Set DISCORD_TOKEN in your environment before running the bot.")
     bot.run(token)
