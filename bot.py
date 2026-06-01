@@ -323,6 +323,7 @@ def build_dashboard_embed(guild: discord.Guild, state: "GuildMusicState") -> dis
         description="Click a button, and a free bot will join your channel!",
         color=BRAND,
     )
+    e.set_image(url="https://cdn.discordapp.com/attachments/1504403776717455415/1510937430079963236/Gemini_Generated_Image_plkyukplkyukplky.png?ex=6a1ea1a3&is=6a1d5023&hm=7a0169f70b1d255001d16b2ece2e4119c397d9ce667a8e19c163b1a2b815fcac&")
     return e
 
 
