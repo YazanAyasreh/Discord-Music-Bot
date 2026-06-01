@@ -27,8 +27,7 @@ The `/panel` command posts a persistent control panel to any channel.
 All buttons use **custom icons** uploaded as application emojis.
 
 ```
-Row 0 │  ▶  Play    ⏮  Prev    ⏸  Pause/Resume    ⏭  Next    📋  Queue
-Row 1 │  🔁  Repeat   🎶  Playlist   ⏹  Stop   🛟  Help   🔊  Volume
+https://cdn.discordapp.com/attachments/1504403776717455415/1510937430079963236/Gemini_Generated_Image_plkyukplkyukplky.png?ex=6a1ea1a3&is=6a1d5023&hm=7a0169f70b1d255001d16b2ece2e4119c397d9ce667a8e19c163b1a2b815fcac&
 ```
 
 Click **▶ Play** while nothing is queued and a modal opens for you to type a search or URL.  
@@ -55,17 +54,7 @@ cd Discord-Music-Bot
 pip install -r requirements.txt
 
 # 3. Set your bot token
-
-# On Replit → add DISCORD_TOKEN as a Secret (Secrets tab in the sidebar)
-
-# On Linux / macOS:
-export DISCORD_TOKEN="your-token-here"
-
-# On Windows PowerShell:
-$env:DISCORD_TOKEN = "your-token-here"
-
-# On Windows Command Prompt (cmd):
-set DISCORD_TOKEN=your-token-here
+/bot_icons/ReadME-1.png
 
 # 4. Run the bot
 python3 bot.py
@@ -173,5 +162,5 @@ MIT — free to use, modify, and distribute.
 ---
 
 <div align="center">
-  <sub>Built with ❤️ using discord.py · Powered by yt-dlp</sub>
+  <sub>Built by ME using discord.py · Powered by yt-dlp</sub>
 </div>
