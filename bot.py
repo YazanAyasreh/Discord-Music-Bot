@@ -195,7 +195,7 @@ def fetch_autoplay_track(finished: Track, history: list[str]) -> Track:
 # ── EMBED BUILDERS ─────────────────────────────────────────────────────────────
 def _footer(embed: discord.Embed, guild_name: str = "") -> discord.Embed:
     embed.set_footer(
-        text=f"🎵 Rhythm  {'• ' + guild_name if guild_name else ''}",
+        text=f"🎵 Carlos  {'• ' + guild_name if guild_name else ''}",
         icon_url="https://cdn.discordapp.com/emojis/1304376706498506792.gif",
     )
     return embed
@@ -203,25 +203,25 @@ def _footer(embed: discord.Embed, guild_name: str = "") -> discord.Embed:
 
 def base_embed(title: str, description: str = "", *, color: int = BRAND) -> discord.Embed:
     e = discord.Embed(title=title, description=description, color=color)
-    e.set_footer(text="🎵 Rhythm • Advanced Music Bot")
+    e.set_footer(text="🎵 Carlos • Advanced Music Bot")
     return e
 
 
 def error_embed(msg: str) -> discord.Embed:
     e = discord.Embed(title="❌  Something went wrong", description=msg, color=ERROR)
-    e.set_footer(text="🎵 Rhythm")
+    e.set_footer(text="🎵 Carlos")
     return e
 
 
 def success_embed(title: str, msg: str) -> discord.Embed:
     e = discord.Embed(title=f"✅  {title}", description=msg, color=SUCCESS)
-    e.set_footer(text="🎵 Rhythm")
+    e.set_footer(text="🎵 Carlos")
     return e
 
 
 def warning_embed(title: str, msg: str) -> discord.Embed:
     e = discord.Embed(title=f"⚠️  {title}", description=msg, color=WARNING)
-    e.set_footer(text="🎵 Rhythm")
+    e.set_footer(text="🎵 Carlos")
     return e
 
 
@@ -314,27 +314,26 @@ def build_queue_embed(guild_id: int, state: "GuildMusicState") -> discord.Embed:
 
     e.add_field(name="Loop",      value=f"{LOOP_EMOJI[state.loop_mode]} `{state.loop_mode.value}`", inline=True)
     e.add_field(name="Shuffle",   value=f"`{'on' if state.shuffle else 'off'}`", inline=True)
-    e.set_footer(text="🎵 Rhythm")
+    e.set_footer(text="Carlos")
     return e
 
 
 def build_dashboard_embed(guild: discord.Guild, state: "GuildMusicState") -> discord.Embed:
     e = discord.Embed(
-        description="Click the button, and any empty bot will connect to your channel without any commands - it is managed through this panel.",
+        description="Click a button, and a free bot will join your channel!",
         color=BRAND,
     )
-    _footer(e, guild.name)
     return e
 
 
 def build_help_embed() -> discord.Embed:
     e = discord.Embed(
-        title="🛟  Rhythm — Command Guide",
+        title="  Carlos — Command Guide",
         description="All commands are slash commands. Type `/` to see autocomplete.",
         color=BRAND,
     )
     e.add_field(
-        name="🎵 Playback",
+        name=" Playback",
         value=(
             "`/music play <query>` — Play or queue a track\n"
             "`/music pause` — Pause playback\n"
@@ -345,7 +344,7 @@ def build_help_embed() -> discord.Embed:
         inline=False,
     )
     e.add_field(
-        name="📋 Queue & Modes",
+        name=" Queue & Modes",
         value=(
             "`/music queue` — View the queue\n"
             "`/music shuffle` — Toggle shuffle\n"
@@ -356,7 +355,7 @@ def build_help_embed() -> discord.Embed:
         inline=False,
     )
     e.add_field(
-        name="🎶 Playlist",
+        name=" Playlist",
         value=(
             "`/playlist save <name>` — Save current queue as a playlist\n"
             "`/playlist load <name>` — Load a saved playlist\n"
@@ -366,7 +365,7 @@ def build_help_embed() -> discord.Embed:
         inline=False,
     )
     e.add_field(
-        name="🎛️ Dashboard",
+        name=" Dashboard",
         value=(
             "`/panel` — Post the interactive control panel\n"
             "`/nowplaying` — Show now-playing card\n"
@@ -375,16 +374,7 @@ def build_help_embed() -> discord.Embed:
         ),
         inline=False,
     )
-    e.add_field(
-        name="🕹️ Button Panel",
-        value=(
-            "**Row 1:** ▶️ Play/Resume · ⏮️ Previous · ⏸️ Pause · ⏭️ Skip · 📋 Queue\n"
-            "**Row 2:** 🔁 Loop · ⏪ Restart · ❤️ Like · ⏩ Skip · 🔊 Volume\n"
-            "**Row 3:** 🎶 Playlist · 🔀 Shuffle · ⏹️ Stop · 🔂 Autoplay · 🛟 Help"
-        ),
-        inline=False,
-    )
-    e.set_footer(text="🎵 Rhythm • Advanced Music Bot")
+    e.set_footer(text=" Carlos • Advanced Music Bot")
     return e
 
 
@@ -480,7 +470,7 @@ class MusicDashboardPanel(discord.ui.View):
 
     # ── Row 0 ──────────────────────────────────────────────────────────────────
 
-    @discord.ui.button(emoji="▶️", style=discord.ButtonStyle.success,   custom_id="p_play",  row=0)
+    @discord.ui.button(emoji="▶️", style=discord.ButtonStyle.secondary		,   custom_id="p_play",  row=0)
     async def play_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         vc = interaction.guild.voice_client if interaction.guild else None
         if vc and vc.is_paused():
@@ -491,7 +481,7 @@ class MusicDashboardPanel(discord.ui.View):
             return await self._refresh(interaction)
         await interaction.response.send_modal(PlayModal(self.music_bot))
 
-    @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.secondary, custom_id="p_prev",  row=0)
+    @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.secondary		, custom_id="p_prev",  row=0)
     async def prev_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         state = self.music_bot.get_state(self.guild_id)
         if not state.play_history:
@@ -512,7 +502,7 @@ class MusicDashboardPanel(discord.ui.View):
         await self.music_bot.play_track(interaction.guild, interaction.channel, track)
         await interaction.followup.send(embed=success_embed("Previous", f"**{track.title}**"), ephemeral=True)
 
-    @discord.ui.button(emoji="⏸️", style=discord.ButtonStyle.secondary, custom_id="p_pause", row=0)
+    @discord.ui.button(emoji="⏸️", style=discord.ButtonStyle.secondary		, custom_id="p_pause", row=0)
     async def pause_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         vc = interaction.guild.voice_client if interaction.guild else None
         if not vc or not vc.is_playing():
@@ -521,7 +511,7 @@ class MusicDashboardPanel(discord.ui.View):
         await self.music_bot.sync_voice_status(interaction.guild)
         await self._refresh(interaction)
 
-    @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.secondary, custom_id="p_skip",  row=0)
+    @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.secondary		, custom_id="p_skip",  row=0)
     async def skip_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         vc = interaction.guild.voice_client if interaction.guild else None
         if not vc or not (vc.is_playing() or vc.is_paused()):
@@ -529,26 +519,26 @@ class MusicDashboardPanel(discord.ui.View):
         vc.stop()
         await interaction.response.send_message(embed=success_embed("Skipped", "Loading next track…"), ephemeral=True)
 
-    @discord.ui.button(emoji="📋", style=discord.ButtonStyle.secondary, custom_id="p_queue", row=0)
+    @discord.ui.button(emoji="📋", style=discord.ButtonStyle.secondary		, custom_id="p_queue", row=0)
     async def queue_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         state = self.music_bot.get_state(self.guild_id)
         await interaction.response.send_message(embed=build_queue_embed(self.guild_id, state), ephemeral=True)
 
     # ── Row 1 ──────────────────────────────────────────────────────────────────
 
-    @discord.ui.button(emoji="🔁", style=discord.ButtonStyle.secondary, custom_id="p_loop",   row=1)
+    @discord.ui.button(emoji="🔁", style=discord.ButtonStyle.secondary		, custom_id="p_loop",   row=1)
     async def loop_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         state = self.music_bot.get_state(self.guild_id)
         modes = list(LoopMode)
         state.loop_mode = modes[(modes.index(state.loop_mode) + 1) % len(modes)]
         await self._refresh(interaction)
 
-    @discord.ui.button(emoji="🎶", style=discord.ButtonStyle.secondary, custom_id="p_pl",     row=1)
+    @discord.ui.button(emoji="🎶", style=discord.ButtonStyle.secondary		, custom_id="p_pl",     row=1)
     async def playlist_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         state = self.music_bot.get_state(self.guild_id)
         await interaction.response.send_message(embed=build_queue_embed(self.guild_id, state), ephemeral=True)
 
-    @discord.ui.button(emoji="⏹️", style=discord.ButtonStyle.danger,    custom_id="p_stop",   row=1)
+    @discord.ui.button(emoji="⏹️", style=discord.ButtonStyle.secondary		,    custom_id="p_stop",   row=1)
     async def stop_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         state = self.music_bot.get_state(self.guild_id)
         state.queue.clear()
@@ -562,11 +552,11 @@ class MusicDashboardPanel(discord.ui.View):
             embed=success_embed("Stopped", "Disconnected and cleared the queue."), ephemeral=True
         )
 
-    @discord.ui.button(emoji="🛟", style=discord.ButtonStyle.secondary, custom_id="p_help",   row=1)
+    @discord.ui.button(emoji="🛟", style=discord.ButtonStyle.secondary		, custom_id="p_help",   row=1)
     async def help_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         await interaction.response.send_message(embed=build_help_embed(), ephemeral=True)
 
-    @discord.ui.button(emoji="🔊", style=discord.ButtonStyle.secondary, custom_id="p_vol",    row=1)
+    @discord.ui.button(emoji="🔊", style=discord.ButtonStyle.secondary		, custom_id="p_vol",    row=1)
     async def volume_btn(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         await interaction.response.send_modal(VolumeModal(self.music_bot, self.guild_id))
 
@@ -1077,7 +1067,7 @@ async def playlist_list(interaction: discord.Interaction) -> None:
     else:
         lines = [f"`{i}.`  **{name}**  — {len(tracks)} track(s)" for i, (name, tracks) in enumerate(pl.items(), 1)]
         e.description = "\n".join(lines)
-    e.set_footer(text="🎵 Rhythm")
+    e.set_footer(text="🎵 Carlos")
     await interaction.response.send_message(embed=e, ephemeral=True)
 
 
@@ -1143,7 +1133,7 @@ async def ping(interaction: discord.Interaction) -> None:
         description=f"WebSocket latency: **{ms} ms**",
         color=color,
     )
-    e.set_footer(text="🎵 Rhythm")
+    e.set_footer(text="🎵 Carlos")
     await interaction.response.send_message(embed=e, ephemeral=True)
 
 
